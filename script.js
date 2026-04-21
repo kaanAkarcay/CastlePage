@@ -1,6 +1,8 @@
 // Handles loading the events for <model-viewer>'s slotted progress bar
 const mv = document.querySelector('model-viewer');
 const arButton = document.getElementById('ar-button');
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 if (window.location.protocol === 'file:') {
   const note = document.createElement('div');
@@ -26,6 +28,37 @@ const onProgress = (event) => {
 };
 
 mv.addEventListener('progress', onProgress);
+
+if (mv) {
+  mv.addEventListener('ar-status', (event) => {
+    // Useful for debugging AR handoff failures on device.
+    console.log('[model-viewer][ar-status]', event.detail.status);
+  });
+}
+
+if (mv && arButton && isIOS) {
+  arButton.addEventListener('click', (event) => {
+    const iosSrc = mv.getAttribute('ios-src');
+    if (!iosSrc) return;
+
+    // On some iOS/Safari combinations Quick Look handoff from model-viewer
+    // can fail silently; force a direct rel="ar" launch as fallback.
+    event.preventDefault();
+    event.stopPropagation();
+
+    const quickLookAnchor = document.createElement('a');
+    quickLookAnchor.setAttribute('rel', 'ar');
+    quickLookAnchor.setAttribute('href', iosSrc);
+
+    const img = document.createElement('img');
+    img.alt = 'Launch AR';
+    quickLookAnchor.appendChild(img);
+
+    document.body.appendChild(quickLookAnchor);
+    quickLookAnchor.click();
+    quickLookAnchor.remove();
+  }, true);
+}
 
 // Show AR button only on devices/browser combos that can actually launch AR.
 if (mv && arButton && typeof mv.canActivateAR === 'function') {
