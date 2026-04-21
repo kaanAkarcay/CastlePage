@@ -46,9 +46,10 @@ if (mv && arButton && isIOS) {
     event.preventDefault();
     event.stopPropagation();
 
+    const quickLookUrl = new URL(iosSrc, window.location.href).toString();
     const quickLookAnchor = document.createElement('a');
     quickLookAnchor.setAttribute('rel', 'ar');
-    quickLookAnchor.setAttribute('href', iosSrc);
+    quickLookAnchor.setAttribute('href', quickLookUrl);
 
     const img = document.createElement('img');
     img.alt = 'Launch AR';
@@ -57,6 +58,13 @@ if (mv && arButton && isIOS) {
     document.body.appendChild(quickLookAnchor);
     quickLookAnchor.click();
     quickLookAnchor.remove();
+
+    // If Quick Look handoff fails silently, force direct navigation to the USDZ.
+    setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        window.location.href = quickLookUrl;
+      }
+    }, 900);
   }, true);
 }
 
