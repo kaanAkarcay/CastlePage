@@ -1,5 +1,6 @@
 // Handles loading the events for <model-viewer>'s slotted progress bar
 const mv = document.querySelector('model-viewer');
+const arButton = document.getElementById('ar-button');
 
 if (window.location.protocol === 'file:') {
   const note = document.createElement('div');
@@ -25,6 +26,17 @@ const onProgress = (event) => {
 };
 
 mv.addEventListener('progress', onProgress);
+
+// Show AR button only on devices/browser combos that can actually launch AR.
+if (mv && arButton && typeof mv.canActivateAR === 'function') {
+  mv.canActivateAR().then((canAR) => {
+    if (!canAR) {
+      arButton.style.display = 'none';
+    }
+  }).catch(() => {
+    arButton.style.display = 'none';
+  });
+}
 
 mv.addEventListener('error', () => {
   const err = document.createElement('div');
